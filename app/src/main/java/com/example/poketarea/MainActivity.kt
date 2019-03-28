@@ -1,7 +1,6 @@
 package com.example.poketarea
 
 import android.os.AsyncTask
-import android.widget.TextView
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -10,9 +9,7 @@ import com.example.poketarea.models.Pokemon
 import kotlinx.android.synthetic.main.activity_main.*
 
 import com.example.poketarea.utilities.NetworkUtils
-import com.example.poketarea.PokemonAdapter
 import java.io.IOException
-import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,15 +19,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        initRecycler()
+        FetchPokemonTask().execute()
+        //initRecycler()
     }
 
 
-    fun initRecycler() {
+    fun initRecycler(pokemonInfo: String?) {
 
-        var pokemon: MutableList<Pokemon> = MutableList(100) {i ->
-            Pokemon(i,"Name: " + i, "Type " + i)
+        var pokemon: MutableList<Pokemon> = MutableList(19) {i ->
+            Pokemon(i,"Name: " + pokemonInfo, "Type " + i)
         }
 
         viewManager = LinearLayoutManager(this)
@@ -40,6 +37,44 @@ class MainActivity : AppCompatActivity() {
             setHasFixedSize(true)
             layoutManager = viewManager
             adapter = viewAdapter
+        }
+
+    }
+
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+    }
+
+    private class FetchPokemonTask : AsyncTask<String, Void, String>() {
+
+        protected override fun doInBackground(vararg pokemonNumbers: String): String? {
+
+            if (pokemonNumbers.size == 0) {
+                return null
+            }
+
+            val ID = pokemonNumbers[0]
+
+            val pokeAPI = NetworkUtils.buildUrl(ID)
+
+            try {
+                return NetworkUtils.getResponseFromHttpUrl(pokeAPI!!)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                return ""
+            }
+
+        }
+
+        override fun onPostExecute(pokemonInfo: String?) {
+            if (pokemonInfo != null || pokemonInfo != "") {
+                //mResultText.setText(pokemonInfo)
+                MainActivity().initRecycler(pokemonInfo)
+            } else {
+                //mResultText.setText(getString(R.string.text_not_found_message))
+
+            }
         }
 
     }
